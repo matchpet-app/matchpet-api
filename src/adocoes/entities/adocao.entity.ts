@@ -22,14 +22,14 @@ export class Adocao {
   id: string;
 
   @ManyToOne(() => Pet)
-  @JoinColumn({ name: 'petId' })
+  @JoinColumn()
   pet: Pet;
 
   @Column()
   petId: string;
 
   @ManyToOne(() => Adotante)
-  @JoinColumn({ name: 'adotanteId' })
+  @JoinColumn()
   adotante: Adotante;
 
   @Column()

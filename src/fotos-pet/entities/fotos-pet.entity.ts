@@ -17,7 +17,7 @@ export class FotosPet {
     () => Pet,
     (pet) => pet.fotos,
   )
-  @JoinColumn({ name: 'petId' })
+  @JoinColumn()
   pet: Pet;
 
   @Column()
