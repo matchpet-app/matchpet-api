@@ -17,14 +17,14 @@ export class Favorito {
   id: string;
 
   @ManyToOne(() => Adotante)
-  @JoinColumn({ name: 'adotanteId' })
+  @JoinColumn()
   adotante: Adotante;
 
   @Column()
   adotanteId: string;
 
   @ManyToOne(() => Pet)
-  @JoinColumn({ name: 'petId' })
+  @JoinColumn()
   pet: Pet;
 
   @Column()

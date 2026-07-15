@@ -17,7 +17,7 @@ export class Adotante {
   id: string;
 
   @OneToOne(() => User)
-  @JoinColumn({ name: 'userId' })
+  @JoinColumn()
   user: User;
 
   @Column({ unique: true })

@@ -27,7 +27,7 @@ export class Pet {
     () => Doador,
     (doador) => doador.pets,
   )
-  @JoinColumn({ name: 'doadorId' })
+  @JoinColumn()
   doador: Doador;
 
   @Column()

@@ -19,7 +19,7 @@ export class AdocaoHistorico {
     () => Adocao,
     (adocao) => adocao.historico,
   )
-  @JoinColumn({ name: 'adocaoId' })
+  @JoinColumn()
   adocao: Adocao;
 
   @Column()
@@ -32,10 +32,10 @@ export class AdocaoHistorico {
   statusNovo: StatusAdocao;
 
   @ManyToOne(() => User, { nullable: true })
-  @JoinColumn({ name: 'alteradoPorUserId' })
+  @JoinColumn({ name: 'alterado_por_user_id' })
   alteradoPor?: User;
 
-  @Column({ nullable: true })
+  @Column({ name: 'alterado_por_user_id', nullable: true })
   alteradoPorUserId: string | null;
 
   @Column({ type: 'text', nullable: true })
