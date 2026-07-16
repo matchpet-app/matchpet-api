@@ -1,11 +1,9 @@
-import {
-  IsEmail,
-  IsEnum,
-  IsString,
-  MinLength,
-  ValidateIf,
-} from 'class-validator';
+import { IsEmail, IsIn, IsString, MinLength, ValidateIf } from 'class-validator';
 import { RoleUser } from '../enums/role-user.enum';
+
+const PUBLIC_ROLES = Object.values(RoleUser).filter(
+  (role) => role !== RoleUser.ADMIN,
+);
 
 export class CreateUserDto {
   @IsEmail()
@@ -20,6 +18,6 @@ export class CreateUserDto {
   @IsString()
   googleId?: string;
 
-  @IsEnum(RoleUser)
+  @IsIn(PUBLIC_ROLES)
   role: RoleUser;
 }
