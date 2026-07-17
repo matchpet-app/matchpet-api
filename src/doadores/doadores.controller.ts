@@ -6,6 +6,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
 } from '@nestjs/common';
@@ -29,13 +30,13 @@ export class DoadoresController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string): Promise<Doador> {
+  findOne(@Param('id', ParseUUIDPipe) id: string): Promise<Doador> {
     return this.doadoresService.findOne(id);
   }
 
   @Patch(':id')
   update(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() updateDoadorDto: UpdateDoadorDto,
   ): Promise<Doador> {
     return this.doadoresService.update(id, updateDoadorDto);
@@ -43,7 +44,7 @@ export class DoadoresController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id') id: string): Promise<void> {
+  remove(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     return this.doadoresService.remove(id);
   }
 }

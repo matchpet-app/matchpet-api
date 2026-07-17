@@ -3,6 +3,7 @@ import {
   IsEnum,
   IsOptional,
   IsString,
+  IsUUID,
   ValidateIf,
   ValidateNested,
 } from 'class-validator';
@@ -10,7 +11,7 @@ import { EnderecoDto } from '../../shared/dto/endereco.dto';
 import { TipoDoador } from '../enums/tipo-doador.enum';
 
 export class CreateDoadorDto {
-  @IsString()
+  @IsUUID()
   userId: string;
 
   @IsEnum(TipoDoador)
