@@ -3,6 +3,8 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Patch,
   Post,
@@ -10,33 +12,38 @@ import {
 import { DoadoresService } from './doadores.service';
 import { CreateDoadorDto } from './dto/create-doador.dto';
 import { UpdateDoadorDto } from './dto/update-doador.dto';
+import { Doador } from './entities/doador.entity';
 
 @Controller('doadores')
 export class DoadoresController {
   constructor(private readonly doadoresService: DoadoresService) {}
 
   @Post()
-  create(@Body() createDoadorDto: CreateDoadorDto) {
+  create(@Body() createDoadorDto: CreateDoadorDto): Promise<Doador> {
     return this.doadoresService.create(createDoadorDto);
   }
 
   @Get()
-  findAll() {
+  findAll(): Promise<Doador[]> {
     return this.doadoresService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id') id: string): Promise<Doador> {
     return this.doadoresService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateDoadorDto: UpdateDoadorDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateDoadorDto: UpdateDoadorDto,
+  ): Promise<Doador> {
     return this.doadoresService.update(id, updateDoadorDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  @HttpCode(HttpStatus.NO_CONTENT)
+  remove(@Param('id') id: string): Promise<void> {
     return this.doadoresService.remove(id);
   }
 }
