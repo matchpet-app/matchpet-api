@@ -6,6 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { QueryFailedError, Repository } from 'typeorm';
+import { PostgresErrorCode } from '../shared/database/postgres-error-codes';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
@@ -81,7 +82,8 @@ export class UsersService {
     } catch (error) {
       if (
         error instanceof QueryFailedError &&
-        (error.driverError as { code?: string })?.code === '23505'
+        (error.driverError as { code?: string })?.code ===
+          PostgresErrorCode.UNIQUE_VIOLATION
       ) {
         throw new ConflictException('Já existe um usuário com este email');
       }

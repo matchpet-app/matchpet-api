@@ -7,7 +7,10 @@ import {
   ValidateIf,
   ValidateNested,
 } from 'class-validator';
+import { IsCNPJ, IsCPF } from 'cpf-cnpj-validator/class-validator';
 import { EnderecoDto } from '../../shared/dto/endereco.dto';
+import { NormalizeCnpj } from '../../shared/transformers/normalize-cnpj.transformer';
+import { NormalizeCpf } from '../../shared/transformers/normalize-cpf.transformer';
 import { TipoDoador } from '../enums/tipo-doador.enum';
 
 export class CreateDoadorDto {
@@ -21,11 +24,13 @@ export class CreateDoadorDto {
   nomeExibicao: string;
 
   @ValidateIf((o: CreateDoadorDto) => o.tipo === TipoDoador.PESSOA_FISICA)
-  @IsString()
+  @NormalizeCpf()
+  @IsCPF()
   cpf?: string;
 
   @ValidateIf((o: CreateDoadorDto) => o.tipo === TipoDoador.ABRIGO_ONG)
-  @IsString()
+  @NormalizeCnpj()
+  @IsCNPJ()
   cnpj?: string;
 
   @IsString()

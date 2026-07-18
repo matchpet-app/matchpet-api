@@ -35,6 +35,9 @@ importers:
       class-validator:
         specifier: ^0.15.1
         version: 0.15.1
+      cpf-cnpj-validator:
+        specifier: ^2.1.2
+        version: 2.1.2(class-validator@0.15.1)(reflect-metadata@0.2.2)
       dotenv:
         specifier: ^17.4.2
         version: 17.4.2
@@ -1587,6 +1590,30 @@ packages:
       typescript: '>=4.9.5'
     peerDependenciesMeta:
       typescript:
+        optional: true
+
+  cpf-cnpj-validator@2.1.2:
+    resolution: {integrity: sha512-JhU4oUhZRugvDZvWBSsQQHNHbWcjc5VW4BlmaKfChm7ddMSh/Ixv2iHM0uFNx3hN3NYgfVgVNl5MbkjNr5tgyA==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@angular/forms': '>=15'
+      class-validator: ^0.14.0 || ^0.15.0
+      joi: ^17.0.0
+      reflect-metadata: ^0.2.0
+      yup: ^1.0.0
+      zod: ^3.22.0 || ^4.0.0
+    peerDependenciesMeta:
+      '@angular/forms':
+        optional: true
+      class-validator:
+        optional: true
+      joi:
+        optional: true
+      reflect-metadata:
+        optional: true
+      yup:
+        optional: true
+      zod:
         optional: true
 
   create-require@1.1.1:
@@ -5056,6 +5083,11 @@ snapshots:
       path-type: 4.0.0
     optionalDependencies:
       typescript: 5.9.3
+
+  cpf-cnpj-validator@2.1.2(class-validator@0.15.1)(reflect-metadata@0.2.2):
+    optionalDependencies:
+      class-validator: 0.15.1
+      reflect-metadata: 0.2.2
 
   create-require@1.1.1: {}
 

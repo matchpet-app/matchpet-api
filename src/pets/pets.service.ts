@@ -2,11 +2,10 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { QueryFailedError, Repository } from 'typeorm';
 import { Doador } from '../doadores/entities/doador.entity';
+import { PostgresErrorCode } from '../shared/database/postgres-error-codes';
 import { CreatePetDto } from './dto/create-pet.dto';
 import { UpdatePetDto } from './dto/update-pet.dto';
 import { Pet } from './entities/pet.entity';
-
-const POSTGRES_FOREIGN_KEY_VIOLATION = '23503';
 
 @Injectable()
 export class PetsService {
@@ -61,7 +60,7 @@ export class PetsService {
       if (
         error instanceof QueryFailedError &&
         (error.driverError as { code?: string })?.code ===
-          POSTGRES_FOREIGN_KEY_VIOLATION
+          PostgresErrorCode.FOREIGN_KEY_VIOLATION
       ) {
         throw new NotFoundException('Doador vinculado não encontrado');
       }
