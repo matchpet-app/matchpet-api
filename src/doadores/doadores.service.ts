@@ -4,13 +4,13 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { QueryFailedError, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
+import { PostgresErrorCode } from '../shared/database/postgres-error-codes';
+import { saveOrMapPostgresError } from '../shared/database/save-or-map-postgres-error';
 import { User } from '../users/entities/user.entity';
 import { CreateDoadorDto } from './dto/create-doador.dto';
 import { UpdateDoadorDto } from './dto/update-doador.dto';
 import { Doador } from './entities/doador.entity';
-
-const POSTGRES_UNIQUE_VIOLATION = '23505';
 
 @Injectable()
 export class DoadoresService {
@@ -67,20 +67,16 @@ export class DoadoresService {
     await this.doadoresRepository.remove(doador);
   }
 
-  private async saveOrThrowConflict(doador: Doador): Promise<Doador> {
-    try {
-      return await this.doadoresRepository.save(doador);
-    } catch (error) {
-      if (
-        error instanceof QueryFailedError &&
-        (error.driverError as { code?: string })?.code ===
-          POSTGRES_UNIQUE_VIOLATION
-      ) {
-        throw new ConflictException(
-          'Já existe um doador com este CPF, CNPJ ou usuário vinculado',
-        );
-      }
-      throw error;
-    }
+  private saveOrThrowConflict(doador: Doador): Promise<Doador> {
+    return saveOrMapPostgresError(
+      () => this.doadoresRepository.save(doador),
+      {
+        [PostgresErrorCode.UNIQUE_VIOLATION]: () => {
+          throw new ConflictException(
+            'Já existe um doador com este CPF, CNPJ ou usuário vinculado',
+          );
+        },
+      },
+    );
   }
 }

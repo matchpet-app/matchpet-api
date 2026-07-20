@@ -5,7 +5,9 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
-import { QueryFailedError, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
+import { PostgresErrorCode } from '../shared/database/postgres-error-codes';
+import { saveOrMapPostgresError } from '../shared/database/save-or-map-postgres-error';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
@@ -75,17 +77,11 @@ export class UsersService {
     await this.usersRepository.remove(user);
   }
 
-  private async saveOrThrowConflict(user: User): Promise<User> {
-    try {
-      return await this.usersRepository.save(user);
-    } catch (error) {
-      if (
-        error instanceof QueryFailedError &&
-        (error.driverError as { code?: string })?.code === '23505'
-      ) {
+  private saveOrThrowConflict(user: User): Promise<User> {
+    return saveOrMapPostgresError(() => this.usersRepository.save(user), {
+      [PostgresErrorCode.UNIQUE_VIOLATION]: () => {
         throw new ConflictException('Já existe um usuário com este email');
-      }
-      throw error;
-    }
+      },
+    });
   }
 }

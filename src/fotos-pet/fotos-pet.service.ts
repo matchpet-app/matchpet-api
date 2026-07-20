@@ -1,26 +1,63 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Pet } from '../pets/entities/pet.entity';
+import { PostgresErrorCode } from '../shared/database/postgres-error-codes';
+import { saveOrMapPostgresError } from '../shared/database/save-or-map-postgres-error';
 import { CreateFotosPetDto } from './dto/create-fotos-pet.dto';
 import { UpdateFotosPetDto } from './dto/update-fotos-pet.dto';
+import { FotosPet } from './entities/fotos-pet.entity';
 
 @Injectable()
 export class FotosPetService {
-  create(createFotosPetDto: CreateFotosPetDto) {
-    return 'This action adds a new fotosPet';
+  constructor(
+    @InjectRepository(FotosPet)
+    private readonly fotosPetRepository: Repository<FotosPet>,
+    @InjectRepository(Pet)
+    private readonly petsRepository: Repository<Pet>,
+  ) {}
+
+  async create(createFotosPetDto: CreateFotosPetDto): Promise<FotosPet> {
+    const pet = await this.petsRepository.findOne({
+      where: { id: createFotosPetDto.petId },
+    });
+    if (!pet) {
+      throw new NotFoundException(
+        `Pet #${createFotosPetDto.petId} não encontrado`,
+      );
+    }
+
+    const foto = this.fotosPetRepository.create(createFotosPetDto);
+    return saveOrMapPostgresError(() => this.fotosPetRepository.save(foto), {
+      [PostgresErrorCode.FOREIGN_KEY_VIOLATION]: () => {
+        throw new NotFoundException('Pet vinculado não encontrado');
+      },
+    });
   }
 
-  findAll() {
-    return `This action returns all fotosPet`;
+  findAll(): Promise<FotosPet[]> {
+    return this.fotosPetRepository.find();
   }
 
-  findOne(id: string) {
-    return `This action returns a #${id} fotosPet`;
+  async findOne(id: string): Promise<FotosPet> {
+    const foto = await this.fotosPetRepository.findOne({ where: { id } });
+    if (!foto) {
+      throw new NotFoundException(`Foto #${id} não encontrada`);
+    }
+    return foto;
   }
 
-  update(id: string, updateFotosPetDto: UpdateFotosPetDto) {
-    return `This action updates a #${id} fotosPet`;
+  async update(
+    id: string,
+    updateFotosPetDto: UpdateFotosPetDto,
+  ): Promise<FotosPet> {
+    const foto = await this.findOne(id);
+    Object.assign(foto, updateFotosPetDto);
+    return this.fotosPetRepository.save(foto);
   }
 
-  remove(id: string) {
-    return `This action removes a #${id} fotosPet`;
+  async remove(id: string): Promise<void> {
+    const foto = await this.findOne(id);
+    await this.fotosPetRepository.remove(foto);
   }
 }

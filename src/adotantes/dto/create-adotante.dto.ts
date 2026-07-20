@@ -1,10 +1,17 @@
 import { Type } from 'class-transformer';
-import { IsDateString, IsString, ValidateNested } from 'class-validator';
+import {
+  IsDateString,
+  IsString,
+  IsUUID,
+  ValidateNested,
+} from 'class-validator';
+import { IsCPF } from 'cpf-cnpj-validator/class-validator';
 import { EnderecoDto } from '../../shared/dto/endereco.dto';
+import { NormalizeCpf } from '../../shared/transformers/normalize-cpf.transformer';
 import { MoradiaDto } from './moradia.dto';
 
 export class CreateAdotanteDto {
-  @IsString()
+  @IsUUID()
   userId: string;
 
   @IsString()
@@ -12,6 +19,10 @@ export class CreateAdotanteDto {
 
   @IsDateString()
   dataNascimento: string;
+
+  @NormalizeCpf()
+  @IsCPF()
+  cpf: string;
 
   @IsString()
   telefone: string;
