@@ -1,7 +1,7 @@
-import { IsInt, IsString, IsUrl, Min } from 'class-validator';
+import { IsInt, IsUrl, IsUUID, Min } from 'class-validator';
 
 export class CreateFotosPetDto {
-  @IsString()
+  @IsUUID()
   petId: string;
 
   @IsUrl()
