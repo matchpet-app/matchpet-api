@@ -1,5 +1,6 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, ParseUUIDPipe } from '@nestjs/common';
 import { AdocoesHistoricoService } from './adocoes-historico.service';
+import { AdocaoHistorico } from './entities/adocao-historico.entity';
 
 @Controller('adocoes-historico')
 export class AdocoesHistoricoController {
@@ -8,12 +9,12 @@ export class AdocoesHistoricoController {
   ) {}
 
   @Get()
-  findAll() {
+  findAll(): Promise<AdocaoHistorico[]> {
     return this.adocoesHistoricoService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseUUIDPipe) id: string): Promise<AdocaoHistorico> {
     return this.adocoesHistoricoService.findOne(id);
   }
 }
