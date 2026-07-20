@@ -4,10 +4,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { QueryFailedError, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Adotante } from '../adotantes/entities/adotante.entity';
 import { Pet } from '../pets/entities/pet.entity';
 import { PostgresErrorCode } from '../shared/database/postgres-error-codes';
+import { saveOrMapPostgresError } from '../shared/database/save-or-map-postgres-error';
 import { CreateFavoritoDto } from './dto/create-favorito.dto';
 import { Favorito } from './entities/favorito.entity';
 
@@ -42,7 +43,19 @@ export class FavoritosService {
     }
 
     const favorito = this.favoritosRepository.create(createFavoritoDto);
-    return this.saveOrThrow(favorito);
+    return saveOrMapPostgresError(
+      () => this.favoritosRepository.save(favorito),
+      {
+        [PostgresErrorCode.UNIQUE_VIOLATION]: () => {
+          throw new ConflictException('Este pet já foi favoritado');
+        },
+        [PostgresErrorCode.FOREIGN_KEY_VIOLATION]: () => {
+          throw new NotFoundException(
+            'Adotante ou pet vinculado não encontrado',
+          );
+        },
+      },
+    );
   }
 
   findAll(): Promise<Favorito[]> {
@@ -62,24 +75,5 @@ export class FavoritosService {
   async remove(id: string): Promise<void> {
     const favorito = await this.findOne(id);
     await this.favoritosRepository.remove(favorito);
-  }
-
-  private async saveOrThrow(favorito: Favorito): Promise<Favorito> {
-    try {
-      return await this.favoritosRepository.save(favorito);
-    } catch (error) {
-      if (error instanceof QueryFailedError) {
-        const code = (error.driverError as { code?: string })?.code;
-        if (code === PostgresErrorCode.UNIQUE_VIOLATION) {
-          throw new ConflictException('Este pet já foi favoritado');
-        }
-        if (code === PostgresErrorCode.FOREIGN_KEY_VIOLATION) {
-          throw new NotFoundException(
-            'Adotante ou pet vinculado não encontrado',
-          );
-        }
-      }
-      throw error;
-    }
   }
 }

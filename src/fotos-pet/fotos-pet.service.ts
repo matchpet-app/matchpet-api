@@ -1,8 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { QueryFailedError, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Pet } from '../pets/entities/pet.entity';
 import { PostgresErrorCode } from '../shared/database/postgres-error-codes';
+import { saveOrMapPostgresError } from '../shared/database/save-or-map-postgres-error';
 import { CreateFotosPetDto } from './dto/create-fotos-pet.dto';
 import { UpdateFotosPetDto } from './dto/update-fotos-pet.dto';
 import { FotosPet } from './entities/fotos-pet.entity';
@@ -27,7 +28,11 @@ export class FotosPetService {
     }
 
     const foto = this.fotosPetRepository.create(createFotosPetDto);
-    return this.saveOrThrowNotFound(foto);
+    return saveOrMapPostgresError(() => this.fotosPetRepository.save(foto), {
+      [PostgresErrorCode.FOREIGN_KEY_VIOLATION]: () => {
+        throw new NotFoundException('Pet vinculado não encontrado');
+      },
+    });
   }
 
   findAll(): Promise<FotosPet[]> {
@@ -54,20 +59,5 @@ export class FotosPetService {
   async remove(id: string): Promise<void> {
     const foto = await this.findOne(id);
     await this.fotosPetRepository.remove(foto);
-  }
-
-  private async saveOrThrowNotFound(foto: FotosPet): Promise<FotosPet> {
-    try {
-      return await this.fotosPetRepository.save(foto);
-    } catch (error) {
-      if (
-        error instanceof QueryFailedError &&
-        (error.driverError as { code?: string })?.code ===
-          PostgresErrorCode.FOREIGN_KEY_VIOLATION
-      ) {
-        throw new NotFoundException('Pet vinculado não encontrado');
-      }
-      throw error;
-    }
   }
 }

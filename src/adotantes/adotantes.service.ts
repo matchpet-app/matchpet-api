@@ -5,8 +5,9 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PostgresErrorCode } from 'src/shared/database/postgres-error-codes';
+import { saveOrMapPostgresError } from 'src/shared/database/save-or-map-postgres-error';
 import { User } from 'src/users/entities/user.entity';
-import { QueryFailedError, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { CreateAdotanteDto } from './dto/create-adotante.dto';
 import { UpdateAdotanteDto } from './dto/update-adotante.dto';
 import { Adotante } from './entities/adotante.entity';
@@ -69,20 +70,16 @@ export class AdotantesService {
     await this.adotantesRepository.remove(adotante);
   }
 
-  private async saveOrThrowConflict(adotante: Adotante): Promise<Adotante> {
-    try {
-      return await this.adotantesRepository.save(adotante);
-    } catch (error) {
-      if (
-        error instanceof QueryFailedError &&
-        (error.driverError as { code?: string })?.code ===
-          PostgresErrorCode.UNIQUE_VIOLATION
-      ) {
-        throw new ConflictException(
-          'Já existe um adotante com este CPF ou usuário vinculado',
-        );
-      }
-      throw error;
-    }
+  private saveOrThrowConflict(adotante: Adotante): Promise<Adotante> {
+    return saveOrMapPostgresError(
+      () => this.adotantesRepository.save(adotante),
+      {
+        [PostgresErrorCode.UNIQUE_VIOLATION]: () => {
+          throw new ConflictException(
+            'Já existe um adotante com este CPF ou usuário vinculado',
+          );
+        },
+      },
+    );
   }
 }
