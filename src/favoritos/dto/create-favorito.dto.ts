@@ -1,9 +1,9 @@
-import { IsString } from 'class-validator';
+import { IsUUID } from 'class-validator';
 
 export class CreateFavoritoDto {
-  @IsString()
+  @IsUUID()
   adotanteId: string;
 
-  @IsString()
+  @IsUUID()
   petId: string;
 }

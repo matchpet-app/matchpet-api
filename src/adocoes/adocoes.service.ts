@@ -4,17 +4,13 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import {
-  DataSource,
-  EntityManager,
-  QueryFailedError,
-  Repository,
-} from 'typeorm';
+import { DataSource, EntityManager, Repository } from 'typeorm';
 import { AdocaoHistorico } from '../adocoes-historico/entities/adocao-historico.entity';
 import { Adotante } from '../adotantes/entities/adotante.entity';
 import { Pet } from '../pets/entities/pet.entity';
 import { StatusPet } from '../pets/enums/status-pet.enum';
 import { PostgresErrorCode } from '../shared/database/postgres-error-codes';
+import { saveOrMapPostgresError } from '../shared/database/save-or-map-postgres-error';
 import { CreateAdocaoDto } from './dto/create-adocao.dto';
 import { MudarStatusAdocaoDto } from './dto/mudar-status-adocao.dto';
 import { UpdateAdocaoDto } from './dto/update-adocao.dto';
@@ -198,21 +194,16 @@ export class AdocoesService {
     }
   }
 
-  private async saveAdocaoOrThrow(
+  private saveAdocaoOrThrow(
     manager: EntityManager,
     adocao: Adocao,
   ): Promise<Adocao> {
-    try {
-      return await manager.save(adocao);
-    } catch (error) {
-      if (
-        error instanceof QueryFailedError &&
-        (error.driverError as { code?: string })?.code ===
-          PostgresErrorCode.FOREIGN_KEY_VIOLATION
-      ) {
-        throw new NotFoundException('Pet ou adotante vinculado não encontrado');
-      }
-      throw error;
-    }
+    return saveOrMapPostgresError(() => manager.save(adocao), {
+      [PostgresErrorCode.FOREIGN_KEY_VIOLATION]: () => {
+        throw new NotFoundException(
+          'Pet ou adotante vinculado não encontrado',
+        );
+      },
+    });
   }
 }
