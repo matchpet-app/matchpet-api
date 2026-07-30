@@ -6,16 +6,18 @@ import { AdocoesHistoricoModule } from './adocoes-historico/adocoes-historico.mo
 import { AdotantesModule } from './adotantes/adotantes.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { AuthModule } from './auth/auth.module';
 import { DoadoresModule } from './doadores/doadores.module';
 import { FavoritosModule } from './favoritos/favoritos.module';
 import { FotosPetModule } from './fotos-pet/fotos-pet.module';
 import { PetsModule } from './pets/pets.module';
+import { validateEnv } from './shared/config/env.validation';
 import { SnakeNamingStrategy } from './shared/database/snake-naming.strategy';
 import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({ isGlobal: true, validate: validateEnv }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
@@ -32,6 +34,7 @@ import { UsersModule } from './users/users.module';
         migrationsRun: true,
       }),
     }),
+    AuthModule,
     UsersModule,
     AdotantesModule,
     DoadoresModule,
