@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -7,10 +8,12 @@ import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, Repository } from 'typeorm';
 import { AdocaoHistorico } from '../adocoes-historico/entities/adocao-historico.entity';
 import { Adotante } from '../adotantes/entities/adotante.entity';
+import type { RequestUser } from '../auth/types/request-user';
 import { Pet } from '../pets/entities/pet.entity';
 import { StatusPet } from '../pets/enums/status-pet.enum';
 import { PostgresErrorCode } from '../shared/database/postgres-error-codes';
 import { saveOrMapPostgresError } from '../shared/database/save-or-map-postgres-error';
+import { RoleUser } from '../users/enums/role-user.enum';
 import { CreateAdocaoDto } from './dto/create-adocao.dto';
 import { MudarStatusAdocaoDto } from './dto/mudar-status-adocao.dto';
 import { UpdateAdocaoDto } from './dto/update-adocao.dto';
@@ -35,37 +38,45 @@ const STATUS_TERMINAIS: StatusAdocao[] = [
   StatusAdocao.CANCELADO,
 ];
 
+const STATUS_SOMENTE_DOADOR: StatusAdocao[] = [
+  StatusAdocao.APROVADO,
+  StatusAdocao.REJEITADO,
+];
+
+interface OwnershipFlags {
+  isAdotanteOwner: boolean;
+  isDoadorOwner: boolean;
+}
+
 @Injectable()
 export class AdocoesService {
   constructor(
     @InjectRepository(Adocao)
     private readonly adocoesRepository: Repository<Adocao>,
+    @InjectRepository(Adotante)
+    private readonly adotantesRepository: Repository<Adotante>,
+    @InjectRepository(Pet)
+    private readonly petsRepository: Repository<Pet>,
     @InjectDataSource()
     private readonly dataSource: DataSource,
   ) {}
 
-  async create(createAdocaoDto: CreateAdocaoDto): Promise<Adocao> {
+  async create(
+    userId: string,
+    createAdocaoDto: CreateAdocaoDto,
+  ): Promise<Adocao> {
+    const adotante = await this.getOwnAdotante(userId);
     const { termos, ...rest } = createAdocaoDto;
 
     return this.dataSource.transaction(async (manager) => {
-      const [pet, adotante] = await Promise.all([
-        manager.findOne(Pet, {
-          where: { id: createAdocaoDto.petId },
-          lock: { mode: 'pessimistic_write' },
-        }),
-        manager.findOne(Adotante, {
-          where: { id: createAdocaoDto.adotanteId },
-        }),
-      ]);
+      const pet = await manager.findOne(Pet, {
+        where: { id: createAdocaoDto.petId },
+        lock: { mode: 'pessimistic_write' },
+      });
 
       if (!pet) {
         throw new NotFoundException(
           `Pet #${createAdocaoDto.petId} não encontrado`,
-        );
-      }
-      if (!adotante) {
-        throw new NotFoundException(
-          `Adotante #${createAdocaoDto.adotanteId} não encontrado`,
         );
       }
       if (pet.status !== StatusPet.DISPONIVEL) {
@@ -76,6 +87,7 @@ export class AdocoesService {
 
       const adocao = manager.create(Adocao, {
         ...rest,
+        adotanteId: adotante.id,
         termos: { ...termos, aceitosEm: new Date(termos.aceitosEm) },
       });
       const adocaoSalva = await this.saveAdocaoOrThrow(manager, adocao);
@@ -86,20 +98,44 @@ export class AdocoesService {
     });
   }
 
-  findAll(): Promise<Adocao[]> {
-    return this.adocoesRepository.find();
+  async findAll(user: RequestUser): Promise<Adocao[]> {
+    if (user.role === RoleUser.ADMIN) {
+      return this.adocoesRepository.find();
+    }
+
+    return this.adocoesRepository
+      .createQueryBuilder('adocao')
+      .innerJoin('adocao.adotante', 'adotante')
+      .innerJoin('adocao.pet', 'pet')
+      .innerJoin('pet.doador', 'doador')
+      .where('adotante.userId = :userId OR doador.userId = :userId', {
+        userId: user.id,
+      })
+      .getMany();
   }
 
-  async findOne(id: string): Promise<Adocao> {
-    const adocao = await this.adocoesRepository.findOne({ where: { id } });
-    if (!adocao) {
+  async findOne(user: RequestUser, id: string): Promise<Adocao> {
+    const adocao = await this.findByIdOrThrow(id);
+    if (user.role === RoleUser.ADMIN) {
+      return adocao;
+    }
+
+    const { isAdotanteOwner, isDoadorOwner } = await this.resolveOwnership(
+      user.id,
+      adocao,
+    );
+    if (!isAdotanteOwner && !isDoadorOwner) {
       throw new NotFoundException(`Adoção #${id} não encontrada`);
     }
     return adocao;
   }
 
-  async update(id: string, updateAdocaoDto: UpdateAdocaoDto): Promise<Adocao> {
-    const adocao = await this.findOne(id);
+  async update(
+    user: RequestUser,
+    id: string,
+    updateAdocaoDto: UpdateAdocaoDto,
+  ): Promise<Adocao> {
+    const adocao = await this.authorizeAdotanteWrite(user, id);
     if (STATUS_TERMINAIS.includes(adocao.status)) {
       throw new ConflictException(
         `Não é possível editar uma adoção com status '${adocao.status}'`,
@@ -116,7 +152,9 @@ export class AdocoesService {
     return this.adocoesRepository.save(adocao);
   }
 
-  async remove(id: string): Promise<void> {
+  async remove(user: RequestUser, id: string): Promise<void> {
+    await this.authorizeAdotanteWrite(user, id);
+
     await this.dataSource.transaction(async (manager) => {
       const adocao = await manager.findOne(Adocao, {
         where: { id },
@@ -137,6 +175,7 @@ export class AdocoesService {
   }
 
   async mudarStatus(
+    user: RequestUser,
     id: string,
     mudarStatusDto: MudarStatusAdocaoDto,
   ): Promise<Adocao> {
@@ -149,6 +188,22 @@ export class AdocoesService {
       });
       if (!adocao) {
         throw new NotFoundException(`Adoção #${id} não encontrada`);
+      }
+
+      if (user.role !== RoleUser.ADMIN) {
+        const { isAdotanteOwner, isDoadorOwner } = await this.resolveOwnership(
+          user.id,
+          adocao,
+          manager,
+        );
+        if (!isAdotanteOwner && !isDoadorOwner) {
+          throw new NotFoundException(`Adoção #${id} não encontrada`);
+        }
+        if (STATUS_SOMENTE_DOADOR.includes(novoStatus) && !isDoadorOwner) {
+          throw new ForbiddenException(
+            'Só o doador do pet pode aprovar ou rejeitar esta adoção',
+          );
+        }
       }
 
       const statusAnterior = adocao.status;
@@ -180,6 +235,74 @@ export class AdocoesService {
     });
   }
 
+  private async authorizeAdotanteWrite(
+    user: RequestUser,
+    id: string,
+  ): Promise<Adocao> {
+    const adocao = await this.findByIdOrThrow(id);
+    if (user.role === RoleUser.ADMIN) {
+      return adocao;
+    }
+
+    const { isAdotanteOwner, isDoadorOwner } = await this.resolveOwnership(
+      user.id,
+      adocao,
+    );
+    if (isAdotanteOwner) {
+      return adocao;
+    }
+    if (isDoadorOwner) {
+      throw new ForbiddenException(
+        'Só o adotante desta adoção pode editar ou remover este registro',
+      );
+    }
+    throw new NotFoundException(`Adoção #${id} não encontrada`);
+  }
+
+  private async resolveOwnership(
+    userId: string,
+    adocao: Adocao,
+    manager?: EntityManager,
+  ): Promise<OwnershipFlags> {
+    const adotantesRepo = manager
+      ? manager.getRepository(Adotante)
+      : this.adotantesRepository;
+    const petsRepo = manager ? manager.getRepository(Pet) : this.petsRepository;
+
+    const [adotante, pet] = await Promise.all([
+      adotantesRepo.findOne({ where: { id: adocao.adotanteId } }),
+      petsRepo.findOne({
+        where: { id: adocao.petId },
+        relations: { doador: true },
+      }),
+    ]);
+
+    return {
+      isAdotanteOwner: adotante?.userId === userId,
+      isDoadorOwner: pet?.doador.userId === userId,
+    };
+  }
+
+  private async findByIdOrThrow(id: string): Promise<Adocao> {
+    const adocao = await this.adocoesRepository.findOne({ where: { id } });
+    if (!adocao) {
+      throw new NotFoundException(`Adoção #${id} não encontrada`);
+    }
+    return adocao;
+  }
+
+  private async getOwnAdotante(userId: string): Promise<Adotante> {
+    const adotante = await this.adotantesRepository.findOne({
+      where: { userId },
+    });
+    if (!adotante) {
+      throw new NotFoundException(
+        'Perfil de adotante não encontrado para este usuário',
+      );
+    }
+    return adotante;
+  }
+
   private statusPetParaNovoStatusAdocao(
     novoStatus: StatusAdocao,
   ): StatusPet | undefined {
@@ -200,9 +323,7 @@ export class AdocoesService {
   ): Promise<Adocao> {
     return saveOrMapPostgresError(() => manager.save(adocao), {
       [PostgresErrorCode.FOREIGN_KEY_VIOLATION]: () => {
-        throw new NotFoundException(
-          'Pet ou adotante vinculado não encontrado',
-        );
+        throw new NotFoundException('Pet ou adotante vinculado não encontrado');
       },
     });
   }
