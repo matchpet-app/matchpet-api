@@ -14,9 +14,6 @@ export class CreateAdocaoDto {
   @IsUUID()
   petId: string;
 
-  @IsUUID()
-  adotanteId: string;
-
   @IsEnum(LocalPet)
   ondeFicaraDia: LocalPet;
 

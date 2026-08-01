@@ -1,5 +1,5 @@
 import { plainToInstance } from 'class-transformer';
-import { IsString, MinLength, validateSync } from 'class-validator';
+import { IsNotEmpty, IsString, MinLength, validateSync } from 'class-validator';
 
 class EnvironmentVariables {
   @IsString()
@@ -7,6 +7,18 @@ class EnvironmentVariables {
     message: 'JWT_SECRET deve ter pelo menos 32 caracteres',
   })
   JWT_SECRET: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'GOOGLE_CLIENT_ID é obrigatório' })
+  GOOGLE_CLIENT_ID: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'COOKIE_DOMAIN é obrigatório' })
+  COOKIE_DOMAIN: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'CORS_ORIGIN é obrigatório' })
+  CORS_ORIGIN: string;
 }
 
 export function validateEnv(

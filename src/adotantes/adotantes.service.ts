@@ -4,10 +4,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { PostgresErrorCode } from 'src/shared/database/postgres-error-codes';
-import { saveOrMapPostgresError } from 'src/shared/database/save-or-map-postgres-error';
-import { User } from 'src/users/entities/user.entity';
 import { Repository } from 'typeorm';
+import { PostgresErrorCode } from '../shared/database/postgres-error-codes';
+import { saveOrMapPostgresError } from '../shared/database/save-or-map-postgres-error';
+import { User } from '../users/entities/user.entity';
 import { CreateAdotanteDto } from './dto/create-adotante.dto';
 import { UpdateAdotanteDto } from './dto/update-adotante.dto';
 import { Adotante } from './entities/adotante.entity';

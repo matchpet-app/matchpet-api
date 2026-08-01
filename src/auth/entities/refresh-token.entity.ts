@@ -3,6 +3,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -22,6 +23,7 @@ export class RefreshToken {
   userId: string;
 
   @Exclude()
+  @Index({ unique: true })
   @Column({ select: false })
   secretHash: string;
 
