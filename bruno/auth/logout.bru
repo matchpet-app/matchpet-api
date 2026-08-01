@@ -1,0 +1,20 @@
+meta {
+  name: Logout
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/auth/logout
+  body: none
+  auth: none
+}
+
+script:post-response {
+  bru.setEnvVar("accessToken", "");
+}
+
+docs {
+  Público (não exige accessToken válido) — revoga o refresh token do
+  cookie, se houver. Responde 204 mesmo sem cookie nenhum (no-op).
+}

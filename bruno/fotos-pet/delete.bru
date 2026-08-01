@@ -1,0 +1,11 @@
+meta {
+  name: Remover foto de pet
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{baseUrl}}/fotos-pet/{{fotoPetId}}
+  body: none
+  auth: inherit
+}

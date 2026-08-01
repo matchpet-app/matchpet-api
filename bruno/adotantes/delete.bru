@@ -1,0 +1,11 @@
+meta {
+  name: Remover adotante
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{baseUrl}}/adotantes/{{adotanteId}}
+  body: none
+  auth: inherit
+}

@@ -1,0 +1,16 @@
+meta {
+  name: Buscar favorito por ID
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/favoritos/{{favoritoId}}
+  body: none
+  auth: inherit
+}
+
+docs {
+  404 se o favorito não existir OU não pertencer ao adotante do
+  accessToken em uso (não revela existência pra quem não é dono).
+}

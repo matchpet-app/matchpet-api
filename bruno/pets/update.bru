@@ -1,0 +1,21 @@
+meta {
+  name: Atualizar pet
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/pets/{{petId}}
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "descricao": "Atualizado via Bruno"
+  }
+}

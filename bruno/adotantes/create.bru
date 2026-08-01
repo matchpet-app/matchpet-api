@@ -1,0 +1,54 @@
+meta {
+  name: Criar adotante
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/adotantes
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "userId": "{{userId}}",
+    "nomeCompleto": "Maria Adotante",
+    "dataNascimento": "1990-05-10",
+    "cpf": "111.444.777-35",
+    "telefone": "11999990000",
+    "endereco": {
+      "cep": "01000-000",
+      "uf": "SP",
+      "cidade": "São Paulo",
+      "bairro": "Centro",
+      "logradouro": "Rua das Flores",
+      "numero": "100"
+    },
+    "moradia": {
+      "tipo": "casa",
+      "posse": "propria",
+      "telaProtecao": "sim",
+      "composicaoFamiliar": {
+        "adultos": 2,
+        "criancas": [],
+        "outrosPets": []
+      }
+    }
+  }
+}
+
+script:post-response {
+  if (res.body && res.body.id) {
+    bru.setEnvVar("adotanteId", res.body.id);
+  }
+}
+
+docs {
+  Precisa de um userId de um usuário já existente (criado via login Google
+  ou inserido direto no banco — não existe mais POST /users aberto).
+}
