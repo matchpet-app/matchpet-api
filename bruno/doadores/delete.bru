@@ -1,0 +1,11 @@
+meta {
+  name: Remover doador
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{baseUrl}}/doadores/{{doadorId}}
+  body: none
+  auth: inherit
+}

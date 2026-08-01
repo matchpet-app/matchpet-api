@@ -8,7 +8,6 @@ import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
 import { PostgresErrorCode } from '../shared/database/postgres-error-codes';
 import { saveOrMapPostgresError } from '../shared/database/save-or-map-postgres-error';
-import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 
@@ -18,25 +17,6 @@ export class UsersService {
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
   ) {}
-
-  async create(createUserDto: CreateUserDto): Promise<User> {
-    const existing = await this.usersRepository.findOne({
-      where: { email: createUserDto.email },
-    });
-
-    if (existing) {
-      throw new ConflictException('Já existe um usuário com este email');
-    }
-
-    const { password, ...rest } = createUserDto;
-
-    const user = this.usersRepository.create({
-      ...rest,
-      passwordHash: password ? await bcrypt.hash(password, 10) : undefined,
-    });
-
-    return this.saveOrThrowConflict(user);
-  }
 
   findAll(): Promise<User[]> {
     return this.usersRepository.find();

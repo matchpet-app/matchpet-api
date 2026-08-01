@@ -1,0 +1,21 @@
+meta {
+  name: Atualizar foto de pet
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/fotos-pet/{{fotoPetId}}
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "ordem": 2
+  }
+}

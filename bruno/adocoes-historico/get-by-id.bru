@@ -1,0 +1,11 @@
+meta {
+  name: Buscar item do histórico por ID
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/adocoes-historico/{{historicoId}}
+  body: none
+  auth: inherit
+}

@@ -1,0 +1,39 @@
+meta {
+  name: Login com Google
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/auth/google
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "idToken": "cole-aqui-um-id_token-real-do-google"
+  }
+}
+
+script:post-response {
+  if (res.body && res.body.accessToken) {
+    bru.setEnvVar("accessToken", res.body.accessToken);
+  }
+}
+
+docs {
+  Precisa de um id_token real do Google (assinado por eles) — o backend só
+  verifica a assinatura, nunca fala com o Google server-to-server. Sem um
+  front-end com Google Identity Services rodando, não dá pra gerar um aqui.
+
+  Alternativa pra testar as rotas protegidas sem passar por esse endpoint:
+  insira um usuário direto no Postgres (`users`, `adotantes`/`doadores`) e
+  gere um JWT manualmente com o mesmo JWT_SECRET do .env, colando o valor
+  em accessToken no ambiente. Isso simula "já estou logado" sem o handshake
+  OAuth completo.
+}

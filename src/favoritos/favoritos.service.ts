@@ -23,15 +23,11 @@ export class FavoritosService {
     private readonly petsRepository: Repository<Pet>,
   ) {}
 
-  async create(createFavoritoDto: CreateFavoritoDto): Promise<Favorito> {
-    const adotante = await this.adotantesRepository.findOne({
-      where: { id: createFavoritoDto.adotanteId },
-    });
-    if (!adotante) {
-      throw new NotFoundException(
-        `Adotante #${createFavoritoDto.adotanteId} não encontrado`,
-      );
-    }
+  async create(
+    userId: string,
+    createFavoritoDto: CreateFavoritoDto,
+  ): Promise<Favorito> {
+    const adotante = await this.getOwnAdotante(userId);
 
     const pet = await this.petsRepository.findOne({
       where: { id: createFavoritoDto.petId },
@@ -42,7 +38,10 @@ export class FavoritosService {
       );
     }
 
-    const favorito = this.favoritosRepository.create(createFavoritoDto);
+    const favorito = this.favoritosRepository.create({
+      adotanteId: adotante.id,
+      petId: createFavoritoDto.petId,
+    });
     return saveOrMapPostgresError(
       () => this.favoritosRepository.save(favorito),
       {
@@ -58,13 +57,17 @@ export class FavoritosService {
     );
   }
 
-  findAll(): Promise<Favorito[]> {
-    return this.favoritosRepository.find();
+  async findAll(userId: string): Promise<Favorito[]> {
+    const adotante = await this.getOwnAdotante(userId);
+    return this.favoritosRepository.find({
+      where: { adotanteId: adotante.id },
+    });
   }
 
-  async findOne(id: string): Promise<Favorito> {
+  async findOne(userId: string, id: string): Promise<Favorito> {
+    const adotante = await this.getOwnAdotante(userId);
     const favorito = await this.favoritosRepository.findOne({
-      where: { id },
+      where: { id, adotanteId: adotante.id },
     });
     if (!favorito) {
       throw new NotFoundException(`Favorito #${id} não encontrado`);
@@ -72,8 +75,20 @@ export class FavoritosService {
     return favorito;
   }
 
-  async remove(id: string): Promise<void> {
-    const favorito = await this.findOne(id);
+  async remove(userId: string, id: string): Promise<void> {
+    const favorito = await this.findOne(userId, id);
     await this.favoritosRepository.remove(favorito);
+  }
+
+  private async getOwnAdotante(userId: string): Promise<Adotante> {
+    const adotante = await this.adotantesRepository.findOne({
+      where: { userId },
+    });
+    if (!adotante) {
+      throw new NotFoundException(
+        'Perfil de adotante não encontrado para este usuário',
+      );
+    }
+    return adotante;
   }
 }

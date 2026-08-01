@@ -1,0 +1,33 @@
+meta {
+  name: Favoritar pet
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/favoritos
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "petId": "{{petId}}"
+  }
+}
+
+script:post-response {
+  if (res.body && res.body.id) {
+    bru.setEnvVar("favoritoId", res.body.id);
+  }
+}
+
+docs {
+  Só ADOTANTE. O adotanteId NÃO vai no body — é derivado do accessToken
+  (usuário logado). Precisa que o accessToken em uso tenha role=adotante
+  e um Adotante já cadastrado pra esse userId.
+}

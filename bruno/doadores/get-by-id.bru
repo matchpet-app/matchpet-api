@@ -1,0 +1,11 @@
+meta {
+  name: Buscar doador por ID
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/doadores/{{doadorId}}
+  body: none
+  auth: inherit
+}

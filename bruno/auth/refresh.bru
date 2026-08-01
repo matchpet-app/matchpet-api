@@ -1,0 +1,24 @@
+meta {
+  name: Refresh token
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/auth/refresh
+  body: none
+  auth: none
+}
+
+script:post-response {
+  if (res.body && res.body.accessToken) {
+    bru.setEnvVar("accessToken", res.body.accessToken);
+  }
+}
+
+docs {
+  Não precisa de header nenhum — o cookie httpOnly `refresh_token` (setado
+  pelo login) já vai junto automaticamente via cookie jar do Bruno, desde
+  que as requests estejam no mesmo ambiente/baseUrl. Rotaciona o refresh
+  token a cada chamada (single-use) e atualiza accessToken no ambiente.
+}

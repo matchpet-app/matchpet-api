@@ -1,0 +1,30 @@
+meta {
+  name: Mudar status da adoção
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/adocoes/{{adocaoId}}/status
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "novoStatus": "aprovado",
+    "observacao": "Aprovado pelo doador"
+  }
+}
+
+docs {
+  Regras de quem pode mudar pra cada status:
+  - aprovado / rejeitado: só o DOADOR dono do pet (403 se for o adotante).
+  - cancelado / concluido: adotante OU doador desta adoção.
+  - ADMIN: sempre pode, qualquer transição.
+  Estranho a essa adoção (nem adotante nem doador): 404, não 403.
+}

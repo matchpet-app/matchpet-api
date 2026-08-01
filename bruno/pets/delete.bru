@@ -1,0 +1,11 @@
+meta {
+  name: Remover pet
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{baseUrl}}/pets/{{petId}}
+  body: none
+  auth: inherit
+}

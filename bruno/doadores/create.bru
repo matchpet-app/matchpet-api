@@ -1,0 +1,45 @@
+meta {
+  name: Criar doador
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/doadores
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "userId": "{{userId}}",
+    "tipo": "pessoa_fisica",
+    "nomeExibicao": "João Doador",
+    "cpf": "111.444.777-35",
+    "telefone": "11999991111",
+    "endereco": {
+      "cep": "01000-000",
+      "uf": "SP",
+      "cidade": "São Paulo",
+      "bairro": "Centro",
+      "logradouro": "Rua das Palmeiras",
+      "numero": "200"
+    },
+    "descricao": "Cuido de pets resgatados"
+  }
+}
+
+script:post-response {
+  if (res.body && res.body.id) {
+    bru.setEnvVar("doadorId", res.body.id);
+  }
+}
+
+docs {
+  Precisa de um userId de um usuário já existente (mesma observação do
+  módulo de adotantes). Se tipo for "abrigo_ong", troca cpf por cnpj.
+}
