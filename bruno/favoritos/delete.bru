@@ -1,0 +1,11 @@
+meta {
+  name: Remover favorito
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{baseUrl}}/favoritos/{{favoritoId}}
+  body: none
+  auth: inherit
+}

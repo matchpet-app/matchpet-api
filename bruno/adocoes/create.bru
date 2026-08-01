@@ -1,0 +1,46 @@
+meta {
+  name: Criar pedido de adoção
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/adocoes
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "petId": "{{petId}}",
+    "ondeFicaraDia": "dentro_de_casa",
+    "ondeFicaraNoite": "dentro_de_casa",
+    "possuiApoioCuidado": "sim",
+    "observacoesAdotante": "Tenho experiência com cães",
+    "termos": {
+      "aceitouResponsabilidadeLongoPrazo": true,
+      "aceitouTempoAdaptacao": true,
+      "aceitouCustosVeterinarios": true,
+      "aceitosEm": "2026-07-30T00:00:00.000Z",
+      "versaoTermos": "v1"
+    }
+  }
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+}
+
+script:post-response {
+  if (res.body && res.body.id) {
+    bru.setEnvVar("adocaoId", res.body.id);
+  }
+}
+
+docs {
+  Só ADOTANTE. O adotanteId NÃO vai no body — é derivado do accessToken.
+}

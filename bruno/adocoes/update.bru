@@ -1,0 +1,27 @@
+meta {
+  name: Atualizar adoção
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/adocoes/{{adocaoId}}
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "observacoesAdotante": "Atualizado via Bruno"
+  }
+}
+
+docs {
+  Só o ADOTANTE dono (ou ADMIN) pode editar — DOADOR recebe 403. Só
+  funciona enquanto o status não for terminal (rejeitado/concluido/
+  cancelado).
+}

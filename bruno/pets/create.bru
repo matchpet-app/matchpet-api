@@ -1,0 +1,51 @@
+meta {
+  name: Criar pet
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/pets
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "doadorId": "{{doadorId}}",
+    "nome": "Rex",
+    "especie": "cachorro",
+    "raca": "SRD",
+    "idadeAproximadaMeses": 24,
+    "porte": "M",
+    "sexo": "macho",
+    "corPredominante": "caramelo",
+    "nivelEnergia": "moderado",
+    "descricao": "Cachorro dócil e brincalhão",
+    "saude": {
+      "vacinado": true,
+      "vermifugado": true,
+      "castrado": true,
+      "possuiDeficiencia": false
+    },
+    "compatibilidade": {
+      "conviveComCriancas": "sim",
+      "conviveComOutrosPets": "nao_testado",
+      "conviveComGatos": "nao_testado"
+    }
+  }
+}
+
+vars:pre-request {
+  baseUrl: http://localhost:3000
+}
+
+script:post-response {
+  if (res.body && res.body.id) {
+    bru.setEnvVar("petId", res.body.id);
+  }
+}

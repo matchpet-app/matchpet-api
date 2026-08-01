@@ -1,0 +1,11 @@
+meta {
+  name: Buscar adotante por ID
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/adotantes/{{adotanteId}}
+  body: none
+  auth: inherit
+}

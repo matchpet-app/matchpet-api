@@ -1,0 +1,11 @@
+meta {
+  name: Buscar foto de pet por ID
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/fotos-pet/{{fotoPetId}}
+  body: none
+  auth: inherit
+}

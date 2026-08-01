@@ -1,0 +1,21 @@
+meta {
+  name: Atualizar doador
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/doadores/{{doadorId}}
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "descricao": "Atualizado via Bruno"
+  }
+}

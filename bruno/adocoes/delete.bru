@@ -1,0 +1,15 @@
+meta {
+  name: Remover adoção
+  type: http
+  seq: 6
+}
+
+delete {
+  url: {{baseUrl}}/adocoes/{{adocaoId}}
+  body: none
+  auth: inherit
+}
+
+docs {
+  Só o ADOTANTE dono (ou ADMIN) — DOADOR recebe 403.
+}
