@@ -16,7 +16,6 @@ headers {
 
 body:json {
   {
-    "doadorId": "{{doadorId}}",
     "nome": "Rex",
     "especie": "cachorro",
     "raca": "SRD",
@@ -48,4 +47,11 @@ script:post-response {
   if (res.body && res.body.id) {
     bru.setEnvVar("petId", res.body.id);
   }
+}
+
+docs {
+  Só DOADOR. doadorId NÃO vai no body — é derivado do accessToken (o
+  Doador do usuário logado). update/remove só o doador dono do pet (ou
+  ADMIN) — outros autenticados recebem 403 (não 404, já que a leitura do
+  pet é pública).
 }

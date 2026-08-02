@@ -10,6 +10,10 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { Roles } from '../auth/decorators/roles.decorator';
+import type { RequestUser } from '../auth/types/request-user';
+import { RoleUser } from '../users/enums/role-user.enum';
 import { CreateFotosPetDto } from './dto/create-fotos-pet.dto';
 import { UpdateFotosPetDto } from './dto/update-fotos-pet.dto';
 import { FotosPet } from './entities/fotos-pet.entity';
@@ -19,9 +23,13 @@ import { FotosPetService } from './fotos-pet.service';
 export class FotosPetController {
   constructor(private readonly fotosPetService: FotosPetService) {}
 
+  @Roles(RoleUser.DOADOR)
   @Post()
-  create(@Body() createFotosPetDto: CreateFotosPetDto): Promise<FotosPet> {
-    return this.fotosPetService.create(createFotosPetDto);
+  create(
+    @CurrentUser() user: RequestUser,
+    @Body() createFotosPetDto: CreateFotosPetDto,
+  ): Promise<FotosPet> {
+    return this.fotosPetService.create(user, createFotosPetDto);
   }
 
   @Get()
@@ -36,15 +44,19 @@ export class FotosPetController {
 
   @Patch(':id')
   update(
+    @CurrentUser() user: RequestUser,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateFotosPetDto: UpdateFotosPetDto,
   ): Promise<FotosPet> {
-    return this.fotosPetService.update(id, updateFotosPetDto);
+    return this.fotosPetService.update(user, id, updateFotosPetDto);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
-    return this.fotosPetService.remove(id);
+  remove(
+    @CurrentUser() user: RequestUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<void> {
+    return this.fotosPetService.remove(user, id);
   }
 }

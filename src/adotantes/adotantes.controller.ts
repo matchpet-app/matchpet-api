@@ -10,6 +10,8 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import type { RequestUser } from '../auth/types/request-user';
 import { AdotantesService } from './adotantes.service';
 import { CreateAdotanteDto } from './dto/create-adotante.dto';
 import { UpdateAdotanteDto } from './dto/update-adotante.dto';
@@ -20,31 +22,41 @@ export class AdotantesController {
   constructor(private readonly adotantesService: AdotantesService) {}
 
   @Post()
-  create(@Body() createAdotanteDto: CreateAdotanteDto) {
-    return this.adotantesService.create(createAdotanteDto);
+  create(
+    @CurrentUser() user: RequestUser,
+    @Body() createAdotanteDto: CreateAdotanteDto,
+  ): Promise<Adotante> {
+    return this.adotantesService.create(user.id, createAdotanteDto);
   }
 
   @Get()
-  findAll(): Promise<Adotante[]> {
-    return this.adotantesService.findAll();
+  findAll(@CurrentUser() user: RequestUser): Promise<Adotante[]> {
+    return this.adotantesService.findAll(user);
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseUUIDPipe) id: string): Promise<Adotante> {
-    return this.adotantesService.findOne(id);
+  findOne(
+    @CurrentUser() user: RequestUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<Adotante> {
+    return this.adotantesService.findOne(user, id);
   }
 
   @Patch(':id')
   update(
+    @CurrentUser() user: RequestUser,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateAdotanteDto: UpdateAdotanteDto,
   ): Promise<Adotante> {
-    return this.adotantesService.update(id, updateAdotanteDto);
+    return this.adotantesService.update(user, id, updateAdotanteDto);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
-    return this.adotantesService.remove(id);
+  remove(
+    @CurrentUser() user: RequestUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<void> {
+    return this.adotantesService.remove(user, id);
   }
 }

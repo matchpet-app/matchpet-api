@@ -4,13 +4,9 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { createHash, randomBytes } from 'crypto';
 import { IsNull, Repository } from 'typeorm';
+import type { RoleUser } from '../users/enums/role-user.enum';
 import { RefreshToken } from './entities/refresh-token.entity';
-import type { RequestUser } from './types/request-user';
-
-interface AccessTokenPayload {
-  sub: string;
-  role: RequestUser['role'];
-}
+import type { AccessTokenPayload } from './types/access-token-payload';
 
 interface IssuedRefreshToken {
   token: string;
@@ -39,8 +35,8 @@ export class TokenService {
     this.refreshTtlMs = ttlDays * 24 * 60 * 60 * 1000;
   }
 
-  signAccessToken(userId: string, role: RequestUser['role']): string {
-    const payload: AccessTokenPayload = { sub: userId, role };
+  signAccessToken(userId: string, roles: RoleUser[]): string {
+    const payload: AccessTokenPayload = { sub: userId, roles };
     return this.jwtService.sign(payload);
   }
 

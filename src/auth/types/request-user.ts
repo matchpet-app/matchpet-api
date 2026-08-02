@@ -3,7 +3,7 @@ import { RoleUser } from '../../users/enums/role-user.enum';
 
 export interface RequestUser {
   id: string;
-  role: RoleUser | null;
+  roles: RoleUser[];
 }
 
 export type AuthenticatedRequest = Request & { user?: RequestUser };
