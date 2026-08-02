@@ -11,6 +11,7 @@ import type { RequestUser } from '../auth/types/request-user';
 import { PostgresErrorCode } from '../shared/database/postgres-error-codes';
 import { saveOrMapPostgresError } from '../shared/database/save-or-map-postgres-error';
 import { User } from '../users/entities/user.entity';
+import { UserRole } from '../users/entities/user-role.entity';
 import { RoleUser } from '../users/enums/role-user.enum';
 import { CreateDoadorDto } from './dto/create-doador.dto';
 import { UpdateDoadorDto } from './dto/update-doador.dto';
@@ -21,8 +22,6 @@ export class DoadoresService {
   constructor(
     @InjectRepository(Doador)
     private readonly doadoresRepository: Repository<Doador>,
-    @InjectRepository(User)
-    private readonly usersRepository: Repository<User>,
     @InjectRepository(Adocao)
     private readonly adocoesRepository: Repository<Adocao>,
     @InjectDataSource()
@@ -33,42 +32,47 @@ export class DoadoresService {
     userId: string,
     createDoadorDto: CreateDoadorDto,
   ): Promise<Doador> {
-    const user = await this.usersRepository.findOne({
-      where: { id: userId },
-    });
+    return this.dataSource.transaction((manager) =>
+      this.createWithManager(manager, userId, createDoadorDto),
+    );
+  }
+
+  async createWithManager(
+    manager: EntityManager,
+    userId: string,
+    createDoadorDto: CreateDoadorDto,
+  ): Promise<Doador> {
+    const user = await manager.findOne(User, { where: { id: userId } });
     if (!user) {
       throw new NotFoundException(`Usuário #${userId} não encontrado`);
     }
-    if (user.role && user.role !== RoleUser.DOADOR) {
-      throw new ConflictException(
-        'Este usuário já possui outro papel na plataforma',
-      );
-    }
 
-    const existingDoador = await this.doadoresRepository.findOne({
+    const existingDoador = await manager.findOne(Doador, {
       where: { userId },
     });
     if (existingDoador) {
       throw new ConflictException('Este usuário já possui um perfil de doador');
     }
 
-    return this.dataSource.transaction(async (manager) => {
-      const doador = manager.create(Doador, {
-        ...createDoadorDto,
-        userId,
-      });
-      const doadorSalvo = await this.saveOrThrowConflict(manager, doador);
-
-      if (!user.role) {
-        await manager.update(User, userId, { role: RoleUser.DOADOR });
-      }
-
-      return doadorSalvo;
+    const doador = manager.create(Doador, {
+      ...createDoadorDto,
+      userId,
     });
+    const doadorSalvo = await this.saveOrThrowConflict(manager, doador);
+
+    await manager
+      .createQueryBuilder()
+      .insert()
+      .into(UserRole)
+      .values({ userId, role: RoleUser.DOADOR })
+      .orIgnore()
+      .execute();
+
+    return doadorSalvo;
   }
 
   async findAll(user: RequestUser): Promise<Doador[]> {
-    if (user.role === RoleUser.ADMIN) {
+    if (user.roles.includes(RoleUser.ADMIN)) {
       return this.doadoresRepository.find();
     }
 
@@ -89,7 +93,7 @@ export class DoadoresService {
 
   async findOne(user: RequestUser, id: string): Promise<Doador> {
     const doador = await this.findByIdOrThrow(id);
-    if (user.role === RoleUser.ADMIN || doador.userId === user.id) {
+    if (user.roles.includes(RoleUser.ADMIN) || doador.userId === user.id) {
       return doador;
     }
     if (await this.isCounterpartAdotante(user.id, id)) {
@@ -118,7 +122,7 @@ export class DoadoresService {
     id: string,
   ): Promise<Doador> {
     const doador = await this.findByIdOrThrow(id);
-    if (user.role === RoleUser.ADMIN || doador.userId === user.id) {
+    if (user.roles.includes(RoleUser.ADMIN) || doador.userId === user.id) {
       return doador;
     }
     if (await this.isCounterpartAdotante(user.id, id)) {

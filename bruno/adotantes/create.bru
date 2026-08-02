@@ -49,9 +49,13 @@ script:post-response {
 
 docs {
   userId NÃO vai no body — é derivado do accessToken. Cria o perfil pra
-  quem estiver logado no momento (o usuário do accessToken em uso).
-  Efeito colateral: se o usuário ainda não tinha role, vira ADOTANTE
-  automaticamente (isso É o onboarding). 409 se já for DOADOR.
+  quem estiver logado no momento (o usuário do accessToken em uso), e
+  concede o papel ADOTANTE como efeito colateral. Um usuário pode ter
+  os dois papéis (ADOTANTE e DOADOR) — não há mais gate de papel único
+  aqui. Isso é o caminho de "adicionar um papel depois do onboarding";
+  o onboarding em si é POST /onboarding, que cria adotante e/ou doador
+  numa única chamada. 409 só se esse usuário já tiver um perfil de
+  adotante.
 
   findAll/findOne só retornam o próprio perfil, de ADMIN, ou de um doador
   que já tenha uma Adocao com este adotante — qualquer outro caso é 404.

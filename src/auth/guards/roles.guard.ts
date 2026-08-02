@@ -23,9 +23,9 @@ export class RolesGuard implements CanActivate {
     }
 
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
-    const role = request.user?.role;
+    const roles = request.user?.roles ?? [];
 
-    if (!role || !requiredRoles.includes(role)) {
+    if (!requiredRoles.some((role) => roles.includes(role))) {
       throw new ForbiddenException('Acesso não permitido para este papel');
     }
 

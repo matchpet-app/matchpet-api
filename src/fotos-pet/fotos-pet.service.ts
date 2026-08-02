@@ -91,7 +91,7 @@ export class FotosPetService {
   }
 
   private async assertOwnsPet(user: RequestUser, pet: Pet): Promise<void> {
-    if (user.role === RoleUser.ADMIN) {
+    if (user.roles.includes(RoleUser.ADMIN)) {
       return;
     }
     const doador = await this.doadoresRepository.findOne({

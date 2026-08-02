@@ -1,0 +1,74 @@
+meta {
+  name: Concluir onboarding
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/onboarding
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "adotante": {
+      "nomeCompleto": "Maria Adotante",
+      "dataNascimento": "1990-05-10",
+      "cpf": "111.444.777-35",
+      "telefone": "11999990000",
+      "endereco": {
+        "cep": "01000-000",
+        "uf": "SP",
+        "cidade": "São Paulo",
+        "bairro": "Centro",
+        "logradouro": "Rua das Flores",
+        "numero": "100"
+      },
+      "moradia": {
+        "tipo": "casa",
+        "posse": "propria",
+        "telaProtecao": "sim",
+        "composicaoFamiliar": {
+          "adultos": 2,
+          "criancas": [],
+          "outrosPets": []
+        }
+      }
+    },
+    "doador": {
+      "tipo": "pessoa_fisica",
+      "nomeExibicao": "Maria Doadora",
+      "cpf": "111.444.777-35",
+      "telefone": "11999991111",
+      "endereco": {
+        "cep": "01000-000",
+        "uf": "SP",
+        "cidade": "São Paulo",
+        "bairro": "Centro",
+        "logradouro": "Rua das Palmeiras",
+        "numero": "200"
+      },
+      "descricao": "Cuido de pets resgatados"
+    }
+  }
+}
+
+docs {
+  userId NÃO vai no body — é derivado do accessToken. Aceita `adotante`
+  e/ou `doador` (pelo menos um dos dois é obrigatório — remova o que não
+  quiser criar neste exemplo). Cria o(s) perfil(is) e concede o(s)
+  papel(is) correspondente(s) numa única transação: se os dois forem
+  enviados e um falhar (ex.: CPF duplicado), nenhum dos dois é criado.
+
+  Só funciona se o usuário do accessToken ainda não tiver nenhum papel —
+  409 caso contrário. Ganhar um papel depois do onboarding é via
+  POST /adotantes ou POST /doadores diretamente.
+
+  A resposta NÃO inclui um accessToken novo — os papéis recém-concedidos
+  só aparecem num token depois de POST /auth/refresh.
+}

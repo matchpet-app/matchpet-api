@@ -4,7 +4,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { OAuth2Client, type TokenPayload } from 'google-auth-library';
 import { Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
+import { UserRole } from '../users/entities/user-role.entity';
+import { RoleUser } from '../users/enums/role-user.enum';
 import { TokenService } from './token.service';
+
+const CURRENT_TERMS_VERSION = '2026-08-02';
 
 export interface SessionTokens {
   accessToken: string;
@@ -23,6 +27,8 @@ export class AuthService {
     private readonly tokenService: TokenService,
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
+    @InjectRepository(UserRole)
+    private readonly userRolesRepository: Repository<UserRole>,
   ) {
     this.googleClientId =
       this.configService.getOrThrow<string>('GOOGLE_CLIENT_ID');
@@ -35,7 +41,8 @@ export class AuthService {
 
     this.logger.log(`Login via Google bem-sucedido para userId=${user.id}`);
 
-    const accessToken = this.tokenService.signAccessToken(user.id, user.role);
+    const roles = await this.getRoles(user.id);
+    const accessToken = this.tokenService.signAccessToken(user.id, roles);
     const { token: refreshToken, expiresAt: refreshTokenExpiresAt } =
       await this.tokenService.issueRefreshToken(user.id);
 
@@ -52,9 +59,17 @@ export class AuthService {
     const user = await this.usersRepository.findOneOrFail({
       where: { id: userId },
     });
-    const accessToken = this.tokenService.signAccessToken(user.id, user.role);
+    const roles = await this.getRoles(user.id);
+    const accessToken = this.tokenService.signAccessToken(user.id, roles);
 
     return { accessToken, refreshToken, refreshTokenExpiresAt };
+  }
+
+  private async getRoles(userId: string): Promise<RoleUser[]> {
+    const userRoles = await this.userRolesRepository.find({
+      where: { userId },
+    });
+    return userRoles.map((userRole) => userRole.role);
   }
 
   async logout(rawRefreshToken: string): Promise<void> {
@@ -106,7 +121,8 @@ export class AuthService {
     const newUser = this.usersRepository.create({
       email,
       googleId,
-      role: null,
+      termosDeUsoAceitosEm: new Date(),
+      termosDeUsoVersao: CURRENT_TERMS_VERSION,
     });
     return this.usersRepository.save(newUser);
   }

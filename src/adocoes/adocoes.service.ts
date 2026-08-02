@@ -9,6 +9,7 @@ import { DataSource, EntityManager, Repository } from 'typeorm';
 import { AdocaoHistorico } from '../adocoes-historico/entities/adocao-historico.entity';
 import { Adotante } from '../adotantes/entities/adotante.entity';
 import type { RequestUser } from '../auth/types/request-user';
+import { Doador } from '../doadores/entities/doador.entity';
 import { Pet } from '../pets/entities/pet.entity';
 import { StatusPet } from '../pets/enums/status-pet.enum';
 import { PostgresErrorCode } from '../shared/database/postgres-error-codes';
@@ -85,6 +86,13 @@ export class AdocoesService {
         );
       }
 
+      const doador = await manager.findOne(Doador, {
+        where: { id: pet.doadorId },
+      });
+      if (doador?.userId === userId) {
+        throw new ConflictException('Não é possível adotar o próprio pet');
+      }
+
       const adocao = manager.create(Adocao, {
         ...rest,
         adotanteId: adotante.id,
@@ -99,7 +107,7 @@ export class AdocoesService {
   }
 
   async findAll(user: RequestUser): Promise<Adocao[]> {
-    if (user.role === RoleUser.ADMIN) {
+    if (user.roles.includes(RoleUser.ADMIN)) {
       return this.adocoesRepository.find();
     }
 
@@ -116,7 +124,7 @@ export class AdocoesService {
 
   async findOne(user: RequestUser, id: string): Promise<Adocao> {
     const adocao = await this.findByIdOrThrow(id);
-    if (user.role === RoleUser.ADMIN) {
+    if (user.roles.includes(RoleUser.ADMIN)) {
       return adocao;
     }
 
@@ -190,7 +198,7 @@ export class AdocoesService {
         throw new NotFoundException(`Adoção #${id} não encontrada`);
       }
 
-      if (user.role !== RoleUser.ADMIN) {
+      if (!user.roles.includes(RoleUser.ADMIN)) {
         const { isAdotanteOwner, isDoadorOwner } = await this.resolveOwnership(
           user.id,
           adocao,
@@ -240,7 +248,7 @@ export class AdocoesService {
     id: string,
   ): Promise<Adocao> {
     const adocao = await this.findByIdOrThrow(id);
-    if (user.role === RoleUser.ADMIN) {
+    if (user.roles.includes(RoleUser.ADMIN)) {
       return adocao;
     }
 
