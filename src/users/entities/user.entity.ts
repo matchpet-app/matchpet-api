@@ -6,7 +6,6 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { RoleUser } from '../enums/role-user.enum';
 
 @Entity('users')
 export class User {
@@ -23,8 +22,11 @@ export class User {
   @Column({ nullable: true, unique: true })
   googleId?: string;
 
-  @Column({ type: 'enum', enum: RoleUser, nullable: true })
-  role: RoleUser | null;
+  @Column({ type: 'timestamp', nullable: true })
+  termosDeUsoAceitosEm?: Date;
+
+  @Column({ nullable: true })
+  termosDeUsoVersao?: string;
 
   @CreateDateColumn()
   createdAt: Date;

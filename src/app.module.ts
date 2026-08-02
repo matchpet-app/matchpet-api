@@ -12,6 +12,7 @@ import { AuthModule } from './auth/auth.module';
 import { DoadoresModule } from './doadores/doadores.module';
 import { FavoritosModule } from './favoritos/favoritos.module';
 import { FotosPetModule } from './fotos-pet/fotos-pet.module';
+import { OnboardingModule } from './onboarding/onboarding.module';
 import { PetsModule } from './pets/pets.module';
 import { validateEnv } from './shared/config/env.validation';
 import { SnakeNamingStrategy } from './shared/database/snake-naming.strategy';
@@ -41,6 +42,7 @@ import { UsersModule } from './users/users.module';
     UsersModule,
     AdotantesModule,
     DoadoresModule,
+    OnboardingModule,
     PetsModule,
     FotosPetModule,
     AdocoesModule,

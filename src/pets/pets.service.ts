@@ -87,7 +87,7 @@ export class PetsService {
     if (!pet) {
       throw new NotFoundException(`Pet #${id} não encontrado`);
     }
-    if (user.role === RoleUser.ADMIN) {
+    if (user.roles.includes(RoleUser.ADMIN)) {
       return pet;
     }
     const doador = await this.doadoresRepository.findOne({

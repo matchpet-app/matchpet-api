@@ -9,12 +9,8 @@ import { JwtService } from '@nestjs/jwt';
 import type { Request } from 'express';
 import { RoleUser } from '../../users/enums/role-user.enum';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
+import type { AccessTokenPayload } from '../types/access-token-payload';
 import type { AuthenticatedRequest, RequestUser } from '../types/request-user';
-
-interface AccessTokenPayload {
-  sub: string;
-  role: RequestUser['role'];
-}
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -51,12 +47,13 @@ export class AuthGuard implements CanActivate {
   }
 
   private toRequestUser(payload: AccessTokenPayload): RequestUser {
-    const isValidRole =
-      payload.role === null || Object.values(RoleUser).includes(payload.role);
-    if (typeof payload.sub !== 'string' || !payload.sub || !isValidRole) {
+    const isValidRoles =
+      Array.isArray(payload.roles) &&
+      payload.roles.every((role) => Object.values(RoleUser).includes(role));
+    if (typeof payload.sub !== 'string' || !payload.sub || !isValidRoles) {
       throw new UnauthorizedException('Token de acesso inválido ou expirado');
     }
-    return { id: payload.sub, role: payload.role };
+    return { id: payload.sub, roles: payload.roles };
   }
 
   private extractToken(request: Request): string | undefined {

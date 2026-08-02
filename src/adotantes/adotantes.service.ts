@@ -11,6 +11,7 @@ import type { RequestUser } from '../auth/types/request-user';
 import { PostgresErrorCode } from '../shared/database/postgres-error-codes';
 import { saveOrMapPostgresError } from '../shared/database/save-or-map-postgres-error';
 import { User } from '../users/entities/user.entity';
+import { UserRole } from '../users/entities/user-role.entity';
 import { RoleUser } from '../users/enums/role-user.enum';
 import { CreateAdotanteDto } from './dto/create-adotante.dto';
 import { UpdateAdotanteDto } from './dto/update-adotante.dto';
@@ -21,8 +22,6 @@ export class AdotantesService {
   constructor(
     @InjectRepository(Adotante)
     private readonly adotantesRepository: Repository<Adotante>,
-    @InjectRepository(User)
-    private readonly usersRepository: Repository<User>,
     @InjectRepository(Adocao)
     private readonly adocoesRepository: Repository<Adocao>,
     @InjectDataSource()
@@ -33,18 +32,21 @@ export class AdotantesService {
     userId: string,
     createAdotanteDto: CreateAdotanteDto,
   ): Promise<Adotante> {
-    const user = await this.usersRepository.findOne({
-      where: { id: userId },
-    });
+    return this.dataSource.transaction((manager) =>
+      this.createWithManager(manager, userId, createAdotanteDto),
+    );
+  }
+
+  async createWithManager(
+    manager: EntityManager,
+    userId: string,
+    createAdotanteDto: CreateAdotanteDto,
+  ): Promise<Adotante> {
+    const user = await manager.findOne(User, { where: { id: userId } });
     if (!user) {
       throw new NotFoundException(`Usuário #${userId} não encontrado`);
     }
-    if (user.role && user.role !== RoleUser.ADOTANTE) {
-      throw new ConflictException(
-        'Este usuário já possui outro papel na plataforma',
-      );
-    }
-    const existingAdotante = await this.adotantesRepository.findOne({
+    const existingAdotante = await manager.findOne(Adotante, {
       where: { userId },
     });
     if (existingAdotante) {
@@ -53,23 +55,25 @@ export class AdotantesService {
       );
     }
 
-    return this.dataSource.transaction(async (manager) => {
-      const adotante = manager.create(Adotante, {
-        ...createAdotanteDto,
-        userId,
-      });
-      const adotanteSalvo = await this.saveOrThrowConflict(manager, adotante);
-
-      if (!user.role) {
-        await manager.update(User, userId, { role: RoleUser.ADOTANTE });
-      }
-
-      return adotanteSalvo;
+    const adotante = manager.create(Adotante, {
+      ...createAdotanteDto,
+      userId,
     });
+    const adotanteSalvo = await this.saveOrThrowConflict(manager, adotante);
+
+    await manager
+      .createQueryBuilder()
+      .insert()
+      .into(UserRole)
+      .values({ userId, role: RoleUser.ADOTANTE })
+      .orIgnore()
+      .execute();
+
+    return adotanteSalvo;
   }
 
   async findAll(user: RequestUser): Promise<Adotante[]> {
-    if (user.role === RoleUser.ADMIN) {
+    if (user.roles.includes(RoleUser.ADMIN)) {
       return this.adotantesRepository.find();
     }
 
@@ -90,7 +94,7 @@ export class AdotantesService {
 
   async findOne(user: RequestUser, id: string): Promise<Adotante> {
     const adotante = await this.findByIdOrThrow(id);
-    if (user.role === RoleUser.ADMIN || adotante.userId === user.id) {
+    if (user.roles.includes(RoleUser.ADMIN) || adotante.userId === user.id) {
       return adotante;
     }
     if (await this.isCounterpartDoador(user.id, id)) {
@@ -119,7 +123,7 @@ export class AdotantesService {
     id: string,
   ): Promise<Adotante> {
     const adotante = await this.findByIdOrThrow(id);
-    if (user.role === RoleUser.ADMIN || adotante.userId === user.id) {
+    if (user.roles.includes(RoleUser.ADMIN) || adotante.userId === user.id) {
       return adotante;
     }
     if (await this.isCounterpartDoador(user.id, id)) {
