@@ -16,7 +16,6 @@ headers {
 
 body:json {
   {
-    "userId": "{{userId}}",
     "tipo": "pessoa_fisica",
     "nomeExibicao": "João Doador",
     "cpf": "111.444.777-35",
@@ -40,6 +39,11 @@ script:post-response {
 }
 
 docs {
-  Precisa de um userId de um usuário já existente (mesma observação do
-  módulo de adotantes). Se tipo for "abrigo_ong", troca cpf por cnpj.
+  userId NÃO vai no body — é derivado do accessToken (mesmo padrão de
+  adotantes/create). Se tipo for "abrigo_ong", troca cpf por cnpj.
+
+  findAll/findOne só retornam o próprio perfil, de ADMIN, ou de um adotante
+  que já tenha uma Adocao com algum pet deste doador — qualquer outro caso
+  é 404. GET /pets embute só um subconjunto público do doador (nome,
+  cidade, uf) pra quem não se qualifica.
 }

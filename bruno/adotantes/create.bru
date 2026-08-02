@@ -16,7 +16,6 @@ headers {
 
 body:json {
   {
-    "userId": "{{userId}}",
     "nomeCompleto": "Maria Adotante",
     "dataNascimento": "1990-05-10",
     "cpf": "111.444.777-35",
@@ -49,6 +48,11 @@ script:post-response {
 }
 
 docs {
-  Precisa de um userId de um usuário já existente (criado via login Google
-  ou inserido direto no banco — não existe mais POST /users aberto).
+  userId NÃO vai no body — é derivado do accessToken. Cria o perfil pra
+  quem estiver logado no momento (o usuário do accessToken em uso).
+  Efeito colateral: se o usuário ainda não tinha role, vira ADOTANTE
+  automaticamente (isso É o onboarding). 409 se já for DOADOR.
+
+  findAll/findOne só retornam o próprio perfil, de ADMIN, ou de um doador
+  que já tenha uma Adocao com este adotante — qualquer outro caso é 404.
 }

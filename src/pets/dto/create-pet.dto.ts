@@ -5,7 +5,6 @@ import {
   IsInt,
   IsOptional,
   IsString,
-  IsUUID,
   Min,
   ValidateNested,
 } from 'class-validator';
@@ -17,9 +16,6 @@ import { CompatibilidadeDto } from './compatibilidade.dto';
 import { InfoSaudeDto } from './info-saude.dto';
 
 export class CreatePetDto {
-  @IsUUID()
-  doadorId: string;
-
   @IsString()
   nome: string;
 
