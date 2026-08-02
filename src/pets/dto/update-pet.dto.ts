@@ -1,6 +1,4 @@
-import { OmitType, PartialType } from '@nestjs/mapped-types';
+import { PartialType } from '@nestjs/mapped-types';
 import { CreatePetDto } from './create-pet.dto';
 
-export class UpdatePetDto extends PartialType(
-  OmitType(CreatePetDto, ['doadorId'] as const),
-) {}
+export class UpdatePetDto extends PartialType(CreatePetDto) {}

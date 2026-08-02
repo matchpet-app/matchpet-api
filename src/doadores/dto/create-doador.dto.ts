@@ -3,7 +3,6 @@ import {
   IsEnum,
   IsOptional,
   IsString,
-  IsUUID,
   ValidateIf,
   ValidateNested,
 } from 'class-validator';
@@ -14,9 +13,6 @@ import { NormalizeCpf } from '../../shared/transformers/normalize-cpf.transforme
 import { TipoDoador } from '../enums/tipo-doador.enum';
 
 export class CreateDoadorDto {
-  @IsUUID()
-  userId: string;
-
   @IsEnum(TipoDoador)
   tipo: TipoDoador;
 
