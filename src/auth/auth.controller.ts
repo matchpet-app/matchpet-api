@@ -95,7 +95,7 @@ export class AuthController {
       secure: true,
       sameSite: 'lax',
       domain: this.configService.getOrThrow<string>('COOKIE_DOMAIN'),
-      path: '/auth',
+      path: '/v1/auth',
     };
   }
 }
