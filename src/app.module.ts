@@ -9,6 +9,7 @@ import { AdotantesModule } from './adotantes/adotantes.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
+import { CepModule } from './cep/cep.module';
 import { DoadoresModule } from './doadores/doadores.module';
 import { FavoritosModule } from './favoritos/favoritos.module';
 import { FotosPetModule } from './fotos-pet/fotos-pet.module';
@@ -40,6 +41,7 @@ import { UsersModule } from './users/users.module';
     }),
     AuthModule,
     UsersModule,
+    CepModule,
     AdotantesModule,
     DoadoresModule,
     OnboardingModule,

@@ -14,6 +14,7 @@ import { Pet } from '../pets/entities/pet.entity';
 import { StatusPet } from '../pets/enums/status-pet.enum';
 import { PostgresErrorCode } from '../shared/database/postgres-error-codes';
 import { saveOrMapPostgresError } from '../shared/database/save-or-map-postgres-error';
+import { EnderecoIncompletoException } from '../shared/exceptions/endereco-incompleto.exception';
 import { RoleUser } from '../users/enums/role-user.enum';
 import { CreateAdocaoDto } from './dto/create-adocao.dto';
 import { MudarStatusAdocaoDto } from './dto/mudar-status-adocao.dto';
@@ -67,6 +68,9 @@ export class AdocoesService {
     createAdocaoDto: CreateAdocaoDto,
   ): Promise<Adocao> {
     const adotante = await this.getOwnAdotante(userId);
+    if (!adotante.endereco.isCompleto()) {
+      throw new EnderecoIncompletoException();
+    }
     const { termos, ...rest } = createAdocaoDto;
 
     return this.dataSource.transaction(async (manager) => {

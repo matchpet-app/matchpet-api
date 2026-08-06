@@ -11,14 +11,17 @@ export class EnderecoDto {
   @IsString()
   cidade: string;
 
+  @IsOptional()
   @IsString()
-  bairro: string;
+  bairro?: string;
 
+  @IsOptional()
   @IsString()
-  logradouro: string;
+  logradouro?: string;
 
+  @IsOptional()
   @IsString()
-  numero: string;
+  numero?: string;
 
   @IsOptional()
   @IsString()
