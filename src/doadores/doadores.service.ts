@@ -108,7 +108,11 @@ export class DoadoresService {
     updateDoadorDto: UpdateDoadorDto,
   ): Promise<Doador> {
     const doador = await this.authorizeSelfWrite(user, id);
-    Object.assign(doador, updateDoadorDto);
+    const { endereco, ...rest } = updateDoadorDto;
+    Object.assign(doador, rest);
+    if (endereco) {
+      Object.assign(doador.endereco, endereco);
+    }
     return this.saveOrThrowConflict(this.doadoresRepository.manager, doador);
   }
 

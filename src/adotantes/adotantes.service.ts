@@ -109,7 +109,11 @@ export class AdotantesService {
     updateAdotanteDto: UpdateAdotanteDto,
   ): Promise<Adotante> {
     const adotante = await this.authorizeSelfWrite(user, id);
-    Object.assign(adotante, updateAdotanteDto);
+    const { endereco, ...rest } = updateAdotanteDto;
+    Object.assign(adotante, rest);
+    if (endereco) {
+      Object.assign(adotante.endereco, endereco);
+    }
     return this.saveOrThrowConflict(this.adotantesRepository.manager, adotante);
   }
 

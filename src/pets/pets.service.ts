@@ -9,6 +9,7 @@ import type { RequestUser } from '../auth/types/request-user';
 import { Doador } from '../doadores/entities/doador.entity';
 import { PostgresErrorCode } from '../shared/database/postgres-error-codes';
 import { saveOrMapPostgresError } from '../shared/database/save-or-map-postgres-error';
+import { EnderecoIncompletoException } from '../shared/exceptions/endereco-incompleto.exception';
 import { RoleUser } from '../users/enums/role-user.enum';
 import { CreatePetDto } from './dto/create-pet.dto';
 import { UpdatePetDto } from './dto/update-pet.dto';
@@ -34,6 +35,9 @@ export class PetsService {
 
   async create(userId: string, createPetDto: CreatePetDto): Promise<Pet> {
     const doador = await this.getOwnDoador(userId);
+    if (!doador.endereco.isCompleto()) {
+      throw new EnderecoIncompletoException();
+    }
 
     const pet = this.petsRepository.create({
       ...createPetDto,
