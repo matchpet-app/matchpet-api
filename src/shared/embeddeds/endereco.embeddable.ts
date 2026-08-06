@@ -11,15 +11,19 @@ export class Endereco {
   @Column()
   cidade: string;
 
-  @Column()
-  bairro: string;
+  @Column({ nullable: true })
+  bairro?: string;
 
-  @Column()
-  logradouro: string;
+  @Column({ nullable: true })
+  logradouro?: string;
 
-  @Column()
-  numero: string;
+  @Column({ nullable: true })
+  numero?: string;
 
   @Column({ nullable: true })
   complemento?: string;
+
+  isCompleto(): boolean {
+    return Boolean(this.bairro && this.logradouro && this.numero);
+  }
 }
